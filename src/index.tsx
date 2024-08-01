@@ -1,4 +1,5 @@
-import { Action, ActionPanel, Form, showHUD, showToast, Toast, open, popToRoot } from "@raycast/api";
+import React, { useState } from "react";
+import { Action, ActionPanel, Detail, Form, useNavigation, showToast, Toast, open, popToRoot, Icon } from "@raycast/api";
 import Jimp from "jimp";
 import pngToIco from "png-to-ico";
 import { join, dirname, basename, extname } from "path";
@@ -26,6 +27,8 @@ const SIZES = {
 const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png"];
 
 export default function Command() {
+  const { push } = useNavigation();
+
   async function handleSubmit(values: FormValues) {
     if (!values.imagePath || values.imagePath.length === 0) {
       await showToast({
@@ -43,7 +46,7 @@ export default function Command() {
       await showToast({
         style: Toast.Style.Failure,
         title: "Invalid file type",
-        message: "Please select a valid image file (jpg, jpeg, png, gif, or bmp)",
+        message: "Please select a valid image file (jpg, jpeg, png)",
       });
       return;
     }
@@ -57,7 +60,7 @@ export default function Command() {
       return;
     }
 
-    await processImage(values.imagePath[0], values.platforms);
+    push(<ProcessingView imagePath={imagePath} platforms={values.platforms} />);
   }
 
   return (
@@ -78,66 +81,95 @@ export default function Command() {
   );
 }
 
-async function processImage(imagePath: string, platforms: string[]) {
-  try {
-    console.log("Starting image processing...");
-    console.log("Image path:", imagePath);
-    console.log("Selected platforms:", platforms);
+function ProcessingView({ imagePath, platforms }: { imagePath: string; platforms: string[] }) {
+  const [status, setStatus] = useState<string>("Processing");
+  const [isProcessing, setIsProcessing] = useState<boolean>(true);
+  const [outputDir, setOutputDir] = useState<string | null>(null);
 
-    // Check if the file exists and is accessible
-    await fs.access(imagePath);
-    console.log("File exists and is accessible");
+  React.useEffect(() => {
+    processImage(imagePath, platforms);
+  }, []);
 
-    // Create output directory
-    const parentDir = dirname(imagePath);
-    const baseFileName = basename(imagePath, ".png");
-    const outputDir = join(parentDir, `${baseFileName}_icons`);
-    await fs.mkdir(outputDir, { recursive: true });
+  async function processImage(imagePath: string, platforms: string[]) {
+    try {
+      const parentDir = dirname(imagePath);
+      const baseFileName = basename(imagePath, extname(imagePath));
+      const outputDir = join(parentDir, `${baseFileName}_icons`);
+      await fs.mkdir(outputDir, { recursive: true });
+      setOutputDir(outputDir);
 
-    console.log("Output directory:", outputDir);
+      const buffer = await fs.readFile(imagePath);
+      const image = await Jimp.read(buffer);
 
-    // Show processing start HUD
-    await showHUD("Processing image...");
+      for (const platform of platforms) {
+        const platformDir = join(outputDir, platform);
+        await fs.mkdir(platformDir, { recursive: true });
 
-    // Read file content
-    const buffer = await fs.readFile(imagePath);
-    console.log("File read successfully, buffer length:", buffer.length);
-
-    // Read original image
-    const image = await Jimp.read(buffer);
-    console.log("Image loaded successfully");
-
-    // Process each platform
-    for (const platform of platforms) {
-      const platformDir = join(outputDir, platform);
-      await fs.mkdir(platformDir, { recursive: true });
-
-      if (platform === "ico") {
-        await generateIcoIcon(image, platformDir);
-      } else {
-        await generatePlatformIcons(image, platform as keyof typeof SIZES, platformDir);
+        if (platform === "ico") {
+          await generateIcoIcon(image, platformDir);
+        } else {
+          await generatePlatformIcons(image, platform as keyof typeof SIZES, platformDir);
+        }
       }
+
+      setStatus("Complete");
+    } catch (error) {
+      console.error("Error:", error);
+      setStatus("Error");
+    } finally {
+      setIsProcessing(false);
     }
-
-    // Show processing complete HUD
-    await showHUD("Icons generated successfully!");
-
-    // Open output directory
-    await open(outputDir);
-
-    // Return to the main page after a short delay
-    // 1 second delay to give users time to see the success message
-    setTimeout(() => {
-      popToRoot();
-    }, 1000);
-  } catch (error) {
-    console.error("Error:", error);
-    await showToast({
-      style: Toast.Style.Failure,
-      title: "Error",
-      message: error instanceof Error ? error.message : "Failed to process image.",
-    });
   }
+
+  async function handleOpenOutputFolder(outputDir: string) {
+    open(outputDir);
+    setTimeout(() => {
+      popToRoot()
+    }, 1000);
+  }
+
+  const getMarkdown = () => {
+    if (isProcessing) {
+      return `
+# Generating Icons ⏳
+
+Please wait...
+      `;
+    }
+    if (status === "Complete") {
+      return `
+# Icons Generated Successfully! 🎉
+
+Icons are saved in:
+
+\`${outputDir}\`
+
+Use the action below to open the output folder.
+      `;
+    }
+    if (status === "Error") {
+      return `
+# Error Occurred 😕
+
+Failed to generate icons. Please try again.
+      `;
+    }
+    return "# Unexpected State";
+  };
+
+  return (
+    <Detail
+      markdown={getMarkdown()}
+      actions={
+        <ActionPanel>
+          {!isProcessing && outputDir && status === "Complete" && (
+            <Action title="Open Output Folder" icon={Icon.Folder} onAction={() => handleOpenOutputFolder(outputDir)} />
+          )}
+          <Action title="Back to Main" icon={Icon.ArrowLeft} onAction={() => popToRoot()} />
+        </ActionPanel>
+      }
+    />
+  );
 }
 
 async function generateIcoIcon(image: Jimp, outputDir: string) {
