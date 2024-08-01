@@ -1,4 +1,4 @@
-import { Action, ActionPanel, Form, useNavigation, showHUD, showToast, Toast, open } from "@raycast/api";
+import { Action, ActionPanel, Form, showHUD, showToast, Toast, open, popToRoot } from "@raycast/api";
 import Jimp from "jimp";
 import pngToIco from "png-to-ico";
 import { join, dirname, basename, extname } from "path";
@@ -26,8 +26,6 @@ const SIZES = {
 const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png"];
 
 export default function Command() {
-  const { push } = useNavigation();
-
   async function handleSubmit(values: FormValues) {
     if (!values.imagePath || values.imagePath.length === 0) {
       await showToast({
@@ -59,7 +57,7 @@ export default function Command() {
       return;
     }
 
-    push(<ProcessImage imagePath={values.imagePath[0]} platforms={values.platforms} />);
+    await processImage(values.imagePath[0], values.platforms);
   }
 
   return (
@@ -80,66 +78,66 @@ export default function Command() {
   );
 }
 
-function ProcessImage({ imagePath, platforms }: { imagePath: string; platforms: string[] }) {
-  async function processImage() {
-    try {
-      console.log("Starting image processing...");
-      console.log("Image path:", imagePath);
-      console.log("Selected platforms:", platforms);
+async function processImage(imagePath: string, platforms: string[]) {
+  try {
+    console.log("Starting image processing...");
+    console.log("Image path:", imagePath);
+    console.log("Selected platforms:", platforms);
 
-      // Check if the file exists and is accessible
-      await fs.access(imagePath);
-      console.log("File exists and is accessible");
+    // Check if the file exists and is accessible
+    await fs.access(imagePath);
+    console.log("File exists and is accessible");
 
-      // Create output directory
-      const parentDir = dirname(imagePath);
-      const baseFileName = basename(imagePath, ".png");
-      const outputDir = join(parentDir, `${baseFileName}_icons`);
-      await fs.mkdir(outputDir, { recursive: true });
+    // Create output directory
+    const parentDir = dirname(imagePath);
+    const baseFileName = basename(imagePath, ".png");
+    const outputDir = join(parentDir, `${baseFileName}_icons`);
+    await fs.mkdir(outputDir, { recursive: true });
 
-      console.log("Output directory:", outputDir);
+    console.log("Output directory:", outputDir);
 
-      // Show processing start HUD
-      await showHUD("Processing image...");
+    // Show processing start HUD
+    await showHUD("Processing image...");
 
-      // Read file content
-      const buffer = await fs.readFile(imagePath);
-      console.log("File read successfully, buffer length:", buffer.length);
+    // Read file content
+    const buffer = await fs.readFile(imagePath);
+    console.log("File read successfully, buffer length:", buffer.length);
 
-      // Read original image
-      const image = await Jimp.read(buffer);
-      console.log("Image loaded successfully");
+    // Read original image
+    const image = await Jimp.read(buffer);
+    console.log("Image loaded successfully");
 
-      // Process each platform
-      for (const platform of platforms) {
-        const platformDir = join(outputDir, platform);
-        await fs.mkdir(platformDir, { recursive: true });
+    // Process each platform
+    for (const platform of platforms) {
+      const platformDir = join(outputDir, platform);
+      await fs.mkdir(platformDir, { recursive: true });
 
-        if (platform === "ico") {
-          await generateIcoIcon(image, platformDir);
-        } else {
-          await generatePlatformIcons(image, platform as keyof typeof SIZES, platformDir);
-        }
+      if (platform === "ico") {
+        await generateIcoIcon(image, platformDir);
+      } else {
+        await generatePlatformIcons(image, platform as keyof typeof SIZES, platformDir);
       }
-
-      // Show processing complete HUD
-      await showHUD("Icons generated successfully!");
-
-      // Open output directory
-      await open(outputDir);
-    } catch (error) {
-      console.error("Error:", error);
-      await showToast({
-        style: Toast.Style.Failure,
-        title: "Error",
-        message: error instanceof Error ? error.message : "Failed to process image. Please check the logs.",
-      });
     }
+
+    // Show processing complete HUD
+    await showHUD("Icons generated successfully!");
+
+    // Open output directory
+    await open(outputDir);
+
+    // Return to the main page after a short delay
+    // 1 second delay to give users time to see the success message
+    setTimeout(() => {
+      popToRoot();
+    }, 1000);
+  } catch (error) {
+    console.error("Error:", error);
+    await showToast({
+      style: Toast.Style.Failure,
+      title: "Error",
+      message: error instanceof Error ? error.message : "Failed to process image.",
+    });
   }
-
-  processImage();
-
-  return null;
 }
 
 async function generateIcoIcon(image: Jimp, outputDir: string) {
