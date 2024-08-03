@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { Action, ActionPanel, Form, showToast, Toast, open, popToRoot } from "@raycast/api";
+import {
+  Action,
+  ActionPanel,
+  Form,
+  showToast,
+  Toast,
+  open,
+  popToRoot,
+  getPreferenceValues,
+  openExtensionPreferences,
+} from "@raycast/api";
 import Jimp from "jimp";
 import pngToIco from "png-to-ico";
 import { join, dirname, basename, extname } from "path";
@@ -12,22 +22,40 @@ interface FormValues {
 
 const PLATFORMS = {
   ico: "ICO",
-  ios: "iOS",
-  ipad: "iPad",
-  macos: "macOS",
+  iOS: "iOS",
+  iPadOS: "iPadOS",
+  macOS: "macOS",
+  android: "Android",
+  watchOS: "watchOS",
+  tvOS: "tvOS",
+  chrome: "Chrome",
+  microsoftStore: "Microsoft Store",
+  steam: "Steam",
+  epic: "Epic Games Store",
 };
 
 const SIZES = {
   ico: [16, 24, 32, 48, 64, 128, 256],
-  ios: [20, 29, 40, 58, 60, 76, 80, 87, 120, 152, 167, 180, 1024],
-  ipad: [20, 29, 40, 58, 76, 80, 87, 120, 152, 167, 180, 1024],
-  macos: [16, 32, 64, 128, 256, 512, 1024],
+  iOS: [20, 29, 40, 58, 60, 76, 80, 87, 120, 152, 167, 180, 1024],
+  iPadOS: [20, 29, 40, 58, 76, 80, 87, 120, 152, 167, 180, 1024],
+  macOS: [16, 32, 64, 128, 256, 512, 1024],
+  android: [48, 72, 96, 144, 192, 512],
+  watchOS: [48, 55, 58, 87, 80, 88, 100, 172, 196, 216, 1024],
+  tvOS: [400, 1280],
+  chrome: [16, 32, 48, 128],
+  microsoftStore: [44, 50, 71, 150, 300],
+  steam: [32, 64, 184, 256],
+  epic: [128, 256, 1024],
 };
 
 const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png"];
 
 export default function Command() {
   const [isProcessing, setIsProcessing] = useState(false);
+  const preferences = getPreferenceValues<ExtensionPreferences>();
+  const defaultPlatforms = (Object.keys(preferences) as (keyof ExtensionPreferences)[]).filter(
+    (key) => preferences[key],
+  );
 
   async function handleSubmit(values: FormValues) {
     if (isProcessing) return;
@@ -72,12 +100,22 @@ export default function Command() {
       actions={
         <ActionPanel>
           <Action.SubmitForm title="Generate Icons" onSubmit={handleSubmit} />
+          <Action
+            title="Open Preferences"
+            shortcut={{ modifiers: ["cmd"], key: "," }}
+            onAction={openExtensionPreferences}
+          />
         </ActionPanel>
       }
       isLoading={isProcessing}
     >
       <Form.FilePicker id="imagePath" title="Select Image" allowMultipleSelection={false} />
-      <Form.TagPicker id="platforms" title="Select Platforms">
+      <Form.TagPicker
+        id="platforms"
+        title="Select Platforms"
+        defaultValue={defaultPlatforms}
+        info="You can set your default platforms in preferences (⌘+,)"
+      >
         {Object.entries(PLATFORMS).map(([key, value]) => (
           <Form.TagPicker.Item key={key} value={key} title={value} />
         ))}
@@ -107,7 +145,7 @@ async function processImage(imagePath: string, platforms: string[]) {
       const platformDir = join(outputDir, platform);
       await fs.mkdir(platformDir, { recursive: true });
 
-      if (platform === "ico") {
+      if (platform === PLATFORMS.ico) {
         await generateIcoIcon(image, platformDir);
       } else {
         await generatePlatformIcons(image, platform as keyof typeof SIZES, platformDir);

@@ -5,7 +5,13 @@
   "description": "Generate app icons for ICO, iOS, iPad, and macOS from a single image file",
   "icon": "command-icon.png",
   "author": "HunterJi",
-  "categories": ["Design Tools", "Developer Tools"],
+  "contributors": [
+    "pernielsentikaer"
+  ],
+  "categories": [
+    "Design Tools",
+    "Developer Tools"
+  ],
   "version": "1.0.0",
   "license": "MIT",
   "commands": [
@@ -37,5 +43,107 @@
     "lint": "ray lint",
     "prepublishOnly": "echo \"\\n\\nIt seems like you are trying to publish the Raycast extension to npm.\\n\\nIf you did intend to publish it to npm, remove the \\`prepublishOnly\\` script and rerun \\`npm publish\\` again.\\nIf you wanted to publish it to the Raycast Store instead, use \\`npm run publish\\` instead.\\n\\n\" && exit 1",
     "publish": "npx @raycast/api@latest publish"
-  }
+  },
+  "preferences": [
+    {
+      "name": "ico",
+      "description": "Add ICO as default platform",
+      "type": "checkbox",
+      "required": false,
+      "default": false,
+      "title": "Default Platforms",
+      "placeholder": "Add ICO as default platform",
+      "label": "ICO"
+    },
+    {
+      "name": "iOS",
+      "type": "checkbox",
+      "description": "Add iOS as default platform",
+      "required": false,
+      "default": false,
+      "placeholder": "Add iOS as default platform",
+      "label": "iOS"
+    },
+    {
+      "name": "iPadOS",
+      "description": "Add iPadOS as default platform",
+      "type": "checkbox",
+      "required": false,
+      "default": false,
+      "placeholder": "Add iPadOS as default platform",
+      "label": "iPadOS"
+    },
+    {
+      "name": "macOS",
+      "description": "Add macOS as default platform",
+      "type": "checkbox",
+      "required": false,
+      "default": false,
+      "placeholder": "Add macOS as default platform",
+      "label": "macOS"
+    },
+    {
+      "name": "android",
+      "description": "Add Android as default platform",
+      "type": "checkbox",
+      "required": false,
+      "default": false,
+      "placeholder": "Add Android as default platform",
+      "label": "Android"
+    },
+    {
+      "name": "watchOS",
+      "description": "Add watchOS as default platform",
+      "type": "checkbox",
+      "required": false,
+      "default": false,
+      "placeholder": "Add watchOS as default platform",
+      "label": "watchOS"
+    },
+    {
+      "name": "tvOS",
+      "description": "Add tvOS as default platform",
+      "type": "checkbox",
+      "required": false,
+      "default": false,
+      "placeholder": "Add tvOS as default platform",
+      "label": "tvOS"
+    },
+    {
+      "name": "chrome",
+      "description": "Add Chrome as default platform",
+      "type": "checkbox",
+      "required": false,
+      "default": false,
+      "placeholder": "Add Chrome as default platform",
+      "label": "Chrome"
+    },
+    {
+      "name": "microsoftStore",
+      "description": "Add Microsoft Store as default platform",
+      "type": "checkbox",
+      "required": false,
+      "default": false,
+      "placeholder": "Add Microsoft Store as default platform",
+      "label": "Microsoft Store"
+    },
+    {
+      "name": "steam",
+      "description": "Add Steam as default platform",
+      "type": "checkbox",
+      "required": false,
+      "default": false,
+      "placeholder": "Add Steam as default platform",
+      "label": "Steam"
+    },
+    {
+      "name": "epic",
+      "description": "Add Epic Games Store as default platform",
+      "type": "checkbox",
+      "required": false,
+      "default": false,
+      "placeholder": "Add Epic Games Store as default platform",
+      "label": "Epic Games Store"
+    }
+  ]
 }
