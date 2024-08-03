@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { Action, ActionPanel, Form, showToast, Toast, open, popToRoot } from "@raycast/api";
+import {
+  Action,
+  ActionPanel,
+  Form,
+  showToast,
+  Toast,
+  open,
+  popToRoot,
+  getPreferenceValues,
+  openExtensionPreferences,
+} from "@raycast/api";
 import Jimp from "jimp";
 import pngToIco from "png-to-ico";
 import { join, dirname, basename, extname } from "path";
@@ -28,6 +38,10 @@ const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png"];
 
 export default function Command() {
   const [isProcessing, setIsProcessing] = useState(false);
+  const preferences = getPreferenceValues<ExtensionPreferences>();
+  const defaultPlatforms = (Object.keys(preferences) as (keyof ExtensionPreferences)[]).filter(
+    (key) => preferences[key],
+  );
 
   async function handleSubmit(values: FormValues) {
     if (isProcessing) return;
@@ -72,12 +86,22 @@ export default function Command() {
       actions={
         <ActionPanel>
           <Action.SubmitForm title="Generate Icons" onSubmit={handleSubmit} />
+          <Action
+            title="Open Preferences"
+            shortcut={{ modifiers: ["cmd"], key: "," }}
+            onAction={openExtensionPreferences}
+          />
         </ActionPanel>
       }
       isLoading={isProcessing}
     >
       <Form.FilePicker id="imagePath" title="Select Image" allowMultipleSelection={false} />
-      <Form.TagPicker id="platforms" title="Select Platforms">
+      <Form.TagPicker
+        id="platforms"
+        title="Select Platforms"
+        defaultValue={defaultPlatforms}
+        info="You can set your default platforms in preferences (⌘+,)"
+      >
         {Object.entries(PLATFORMS).map(([key, value]) => (
           <Form.TagPicker.Item key={key} value={key} title={value} />
         ))}
