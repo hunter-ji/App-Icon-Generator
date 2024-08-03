@@ -56,7 +56,11 @@
       "label": "ICO"
     },
     {
+<<<<<<< HEAD
       "name": "iOS",
+=======
+      "name": "ios",
+>>>>>>> contributions/merge-1722657409862484000
       "type": "checkbox",
       "description": "Add iOS as default platform",
       "required": false,
@@ -65,6 +69,7 @@
       "label": "iOS"
     },
     {
+<<<<<<< HEAD
       "name": "iPadOS",
       "description": "Add iPadOS as default platform",
       "type": "checkbox",
@@ -75,12 +80,25 @@
     },
     {
       "name": "macOS",
+=======
+      "name": "ipad",
+      "description": "Add iPad as default platform",
+      "type": "checkbox",
+      "required": false,
+      "default": false,
+      "placeholder": "Add iPad as default platform",
+      "label": "iPad"
+    },
+    {
+      "name": "macos",
+>>>>>>> contributions/merge-1722657409862484000
       "description": "Add macOS as default platform",
       "type": "checkbox",
       "required": false,
       "default": false,
       "placeholder": "Add macOS as default platform",
       "label": "macOS"
+<<<<<<< HEAD
     },
     {
       "name": "android",
@@ -144,6 +162,8 @@
       "default": false,
       "placeholder": "Add Epic Games Store as default platform",
       "label": "Epic Games Store"
+=======
+>>>>>>> contributions/merge-1722657409862484000
     }
   ]
 }
